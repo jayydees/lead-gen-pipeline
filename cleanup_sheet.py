@@ -3,9 +3,26 @@ import json
 import os
 import re
 from datetime import date
-from dotenv import load_dotenv
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+with open(_env_path, encoding="utf-8-sig") as _f:
+    _content = _f.read()
 
-load_dotenv()
+def _extract_env(content, key):
+    # Handles single-quoted multi-line values and bare values
+    import re
+    m = re.search(rf"^{key}\s*=\s*'(.*?)'", content, re.DOTALL | re.MULTILINE)
+    if m:
+        return m.group(1)
+    m = re.search(rf'^{key}\s*=\s*"(.*?)"', content, re.DOTALL | re.MULTILINE)
+    if m:
+        return m.group(1)
+    m = re.search(rf"^{key}\s*=\s*(.+)$", content, re.MULTILINE)
+    if m:
+        return m.group(1).strip()
+    return ""
+
+os.environ.setdefault("GOOGLE_SHEET_ID", _extract_env(_content, "GOOGLE_SHEET_ID"))
+os.environ.setdefault("GOOGLE_CREDENTIALS_JSON", _extract_env(_content, "GOOGLE_CREDENTIALS_JSON"))
 
 import gspread
 from google.oauth2.service_account import Credentials
