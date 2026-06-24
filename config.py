@@ -13,20 +13,32 @@ GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 PIPELINE_API_KEY = os.environ["PIPELINE_API_KEY"]
 
 SEED_SEARCH_TERMS = [
+    # Clutch directory
     'site:clutch.co "automation" "AI" "small business" remote agency',
     'site:clutch.co "n8n" OR "workflow automation" agency',
     'site:clutch.co "AI implementation" boutique agency UK',
     'site:clutch.co "product engineering" remote agency Europe',
+    # Direct web
     '"n8n certified partner" agency',
-    '"n8n" agency "case study" remote',
-    'boutique "AI automation" agency remote "small team" site:linkedin.com',
-    '"workflow automation agency" "we are a team" OR "person team" remote',
-    'indiehackers.com "automation agency" OR "AI agency"',
-    '"zapier expert" OR "make.com expert" agency boutique remote',
-    '"AI agency" "10 people" OR "15 people" OR "small team" UK OR Europe',
     '"LLM integration" agency "product engineering" remote',
-    'site:toptal.com "automation" "AI agency" partners',
     '"built with Claude" OR "powered by Claude" agency',
+    '"workflow automation agency" "we are a team" OR "small team" remote',
+    # LinkedIn discovery (Exa finds company pages; use scrape_linkedin_company to enrich)
+    'site:linkedin.com/company "AI automation" agency "11-50 employees"',
+    'site:linkedin.com/company "workflow automation" boutique agency remote',
+    # Reddit discovery (agencies recommended or discussed)
+    'site:reddit.com "AI automation agency" recommend OR hire OR "worked with"',
+    'site:reddit.com "n8n agency" OR "make.com agency" hire freelancer',
+    'site:reddit.com "looking for automation agency" OR "recommend automation agency"',
+    # IndieHackers
+    'site:indiehackers.com "automation agency" OR "AI agency"',
+]
+
+# Twitter discovery queries (passed to search_twitter tool)
+TWITTER_SEED_QUERIES = [
+    "AI automation agency hiring freelancers remote",
+    "workflow automation consultancy small team n8n Claude",
+    "LLM implementation agency boutique remote-first",
 ]
 
 # Target: 10-20 qualified new companies per day

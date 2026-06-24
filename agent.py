@@ -10,9 +10,11 @@ from config import (
     MAX_RESULTS_PER_QUERY,
     SCORING_RUBRIC,
     SEED_SEARCH_TERMS,
+    TWITTER_SEED_QUERIES,
 )
 from tools.apify_linkedin import scrape_linkedin_company as _linkedin
 from tools.apify_twitter import search_twitter as _twitter
+from tools.apify_reddit import search_reddit as _reddit
 from tools.notify import send_notification as _send_notification
 from tools.scrape import scrape as _scrape
 from tools.search import search as _search
@@ -134,16 +136,36 @@ _TOOLS = types.Tool(
         types.FunctionDeclaration(
             name="search_twitter",
             description=(
-                "Search Twitter/X for recent posts about a company to verify their "
-                "AI/automation focus and activity level. Use sparingly — only for "
-                "borderline companies where tweet activity would change the score."
+                "Search Twitter/X for agencies and leads. Use for TWO purposes: "
+                "(1) Discovery — search for 'AI automation agency hiring' or 'n8n agency remote' "
+                "to find agencies posting about their work. "
+                "(2) Enrichment — verify a known company's activity level. "
+                "Run at least 2-3 Twitter searches per pipeline run."
             ),
             parameters=types.Schema(
                 type=types.Type.OBJECT,
                 properties={
                     "query": types.Schema(
                         type=types.Type.STRING,
-                        description="Search query, e.g. 'Acme Agency AI automation'",
+                        description="Search query, e.g. 'AI automation agency remote hiring'",
+                    )
+                },
+                required=["query"],
+            ),
+        ),
+        types.FunctionDeclaration(
+            name="search_reddit",
+            description=(
+                "Search Reddit for posts where people discuss, recommend, or hire automation "
+                "and AI agencies. Use for discovery — find agency names mentioned in threads. "
+                "Run at least 2 Reddit searches per pipeline run."
+            ),
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "query": types.Schema(
+                        type=types.Type.STRING,
+                        description="Search query, e.g. 'AI automation agency recommend hire'",
                     )
                 },
                 required=["query"],
@@ -174,6 +196,7 @@ def _build_system_prompt(seen_domains: set) -> str:
     today = date.today().isoformat()
     seen_list = "\n".join(sorted(seen_domains)) if seen_domains else "(none yet)"
     seed_queries = "\n".join(f"- {t}" for t in SEED_SEARCH_TERMS)
+    twitter_queries = "\n".join(f"- {t}" for t in TWITTER_SEED_QUERIES)
 
     return f"""You are a lead generation agent finding small-to-medium agencies for freelance outreach.
 
@@ -193,18 +216,25 @@ Only include companies with a score of 50 or higher.
 ## Already Seen Domains — SKIP THESE
 {seen_list}
 
-## Seed Search Queries
-Start with these, then generate your own variations:
+## Seed Search Queries (Exa web search)
 {seed_queries}
 
-## Workflow
-1. Run at least 6 different search queries across the seed list to cast a wide net
-2. For every URL that looks like a real agency website (not Wikipedia, not an enterprise, not a job board), scrape it
-3. Score each scraped company using the rubric — be generous, err on the side of including borderline cases
-4. After scraping at least 10-15 candidates, call append_to_sheet with all companies scoring >= 40
-5. Call send_notification with a summary — even if only 1-2 companies qualify, still send it
+## Twitter Discovery Queries
+Run ALL of these via search_twitter — they find agencies posting publicly about their work:
+{twitter_queries}
 
-Do NOT give up early. If a search query returns no relevant results, move on to the next one immediately. Keep going until you have tried all seed queries or found 20 companies.
+## Workflow — use EVERY channel below, in order
+1. **Exa web search** — run ALL seed queries above; scrape every promising agency URL you find
+2. **Twitter** — run all 3 Twitter queries via search_twitter; any agency handle or website you find, scrape it
+3. **LinkedIn discovery** — the seed queries include site:linkedin.com/company searches; for each LinkedIn URL found, call scrape_linkedin_company to enrich it
+4. **Reddit** — call search_reddit with 2 queries like "AI automation agency recommend" and "n8n agency hire freelancer"; extract agency names/URLs from posts and comments, then scrape those websites
+5. Score every candidate using the rubric; include all scoring >= 40
+6. Call append_to_sheet once with all qualified companies
+7. Call send_notification with a summary
+
+Set Source accurately per company: "Exa search", "Twitter", "LinkedIn", "Reddit", "Clutch", "IndieHackers"
+
+Do NOT give up early. Run every channel. Keep going until you have tried all seed queries or found {MAX_COMPANIES_PER_RUN} companies.
 
 ## append_to_sheet Field Format
 - Date Found: {today} — ALWAYS set this, never leave blank
@@ -285,6 +315,8 @@ def run_agent(seen_domains: set | None = None) -> dict:
             return _linkedin(args["linkedin_url"])
         elif name == "search_twitter":
             return _twitter(args["query"])
+        elif name == "search_reddit":
+            return _reddit(args["query"])
         return f"Unknown tool: {name}"
 
     while True:
