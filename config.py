@@ -11,15 +11,20 @@ GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 PIPELINE_API_KEY = os.environ["PIPELINE_API_KEY"]
 
 SEED_SEARCH_TERMS = [
-    '"n8n certified" agency',
-    '"Claude partner" agency AI',
-    '"automation agency" remote UK',
-    '"automation agency" remote Europe',
-    '"AI implementation" agency remote',
-    '"product engineering" agency remote',
-    '"workflow automation" agency "small team"',
-    '"AI agency" UK OR Europe remote',
-    'automation consulting agency distributed team',
+    'site:clutch.co "automation" "AI" "small business" remote agency',
+    'site:clutch.co "n8n" OR "workflow automation" agency',
+    'site:clutch.co "AI implementation" boutique agency UK',
+    'site:clutch.co "product engineering" remote agency Europe',
+    '"n8n certified partner" agency',
+    '"n8n" agency "case study" remote',
+    'boutique "AI automation" agency remote "small team" site:linkedin.com',
+    '"workflow automation agency" "we are a team" OR "person team" remote',
+    'indiehackers.com "automation agency" OR "AI agency"',
+    '"zapier expert" OR "make.com expert" agency boutique remote',
+    '"AI agency" "10 people" OR "15 people" OR "small team" UK OR Europe',
+    '"LLM integration" agency "product engineering" remote',
+    'site:toptal.com "automation" "AI agency" partners',
+    '"built with Claude" OR "powered by Claude" agency',
 ]
 
 # Target: 10-20 qualified new companies per day

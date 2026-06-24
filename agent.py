@@ -155,11 +155,13 @@ Start with these, then generate your own variations:
 {seed_queries}
 
 ## Workflow
-1. Run search queries to discover candidates
-2. Scrape each promising website to extract signals
-3. Score each company using the rubric
-4. Once done (or after exhausting reasonable leads), call append_to_sheet with all companies scoring >= 50
-5. Call send_notification with a summary email
+1. Run at least 6 different search queries across the seed list to cast a wide net
+2. For every URL that looks like a real agency website (not Wikipedia, not an enterprise, not a job board), scrape it
+3. Score each scraped company using the rubric — be generous, err on the side of including borderline cases
+4. After scraping at least 10-15 candidates, call append_to_sheet with all companies scoring >= 40
+5. Call send_notification with a summary — even if only 1-2 companies qualify, still send it
+
+Do NOT give up early. If a search query returns no relevant results, move on to the next one immediately. Keep going until you have tried all seed queries or found 20 companies.
 
 ## append_to_sheet Field Format
 - Date Found: {today}
