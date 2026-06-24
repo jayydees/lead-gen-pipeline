@@ -37,7 +37,7 @@ SCRAPE_TIMEOUT_SECONDS = 10
 SCORING_RUBRIC = """
 Score each company 0-100 based on these criteria:
 
-- Region match (US/UK/EU explicitly confirmed): +25 points
+- Region match (US/UK/EU/Canada/Australia/NZ/Eastern Europe/Israel/Singapore confirmed): +25 points
 - Remote-friendly signals ("remote", "distributed", "async", "globally"): +20 points
 - AI/automation depth (mentions n8n, Claude, LLM, workflow automation, AI implementation): +30 points
 - Small-to-medium size (team of <50, startup, boutique agency language): +10 points
@@ -60,4 +60,5 @@ SHEET_COLUMNS = [
     "Contact Email",
     "Score",
     "Why",
+    "Source",
 ]

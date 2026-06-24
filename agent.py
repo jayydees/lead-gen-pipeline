@@ -35,6 +35,7 @@ _COMPANY_SCHEMA = types.Schema(
         "Contact Email": types.Schema(type=types.Type.STRING),
         "Score": types.Schema(type=types.Type.NUMBER),
         "Why": types.Schema(type=types.Type.STRING),
+        "Source": types.Schema(type=types.Type.STRING),
     },
     required=["Company Name", "Website", "Score"],
 )
@@ -180,7 +181,7 @@ Today's date: {today}
 
 ## Goal
 Find up to {MAX_COMPANIES_PER_RUN} new agencies matching this profile:
-- Based in US, UK, or EU (or explicitly remote-first)
+- Based in US, UK, EU, Canada, Australia/NZ, Eastern Europe (Poland, Romania, Czech Republic), Israel, or Singapore — OR explicitly remote-first anywhere
 - Specialise in AI, automation, or product engineering
 - Small to medium size (under 50 people)
 - Likely to hire senior freelancers or contractors
@@ -211,6 +212,7 @@ Do NOT give up early. If a search query returns no relevant results, move on to 
 - AI/Automation Stack (tools mentioned, e.g. "n8n, Claude, Zapier")
 - Founder Name, LinkedIn URL, Contact Email (leave blank if not found)
 - Score (integer 0-100), Why (1-2 sentence justification)
+- Source: where you found this lead — e.g. "Exa search", "LinkedIn", "Twitter", "Reddit", "Clutch", "GitHub"
 
 ## Notification Format
 First line: "Subject: Lead Gen — N new agencies [{today}]"
