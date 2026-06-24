@@ -207,12 +207,14 @@ Start with these, then generate your own variations:
 Do NOT give up early. If a search query returns no relevant results, move on to the next one immediately. Keep going until you have tried all seed queries or found 20 companies.
 
 ## append_to_sheet Field Format
-- Date Found: {today}
-- Company Name, Website (full URL), Location, Size Signal, Remote Signal
-- AI/Automation Stack (tools mentioned, e.g. "n8n, Claude, Zapier")
-- Founder Name, LinkedIn URL, Contact Email (leave blank if not found)
+- Date Found: {today} — ALWAYS set this, never leave blank
+- Company Name, Website (full URL), Location
+- Size Signal: estimate from the scraped page (e.g. "5-15 people", "team of 8", "10-20"). If unclear, write "small agency"
+- Remote Signal: "remote-first", "hybrid", "on-site", or "unclear"
+- AI/Automation Stack: tools mentioned, e.g. "n8n, Claude, Zapier". If none found write "not specified"
+- Founder Name, LinkedIn URL, Contact Email — scrape the About/Team/Contact page; leave blank only if genuinely not found
 - Score (integer 0-100), Why (1-2 sentence justification)
-- Source: where you found this lead — e.g. "Exa search", "LinkedIn", "Twitter", "Reddit", "Clutch", "GitHub"
+- Source: ALWAYS set — the channel where you found this lead. Use one of: "Exa search", "Clutch", "LinkedIn", "Twitter", "IndieHackers", "GitHub", "Reddit". Never leave blank.
 
 ## Notification Format
 First line: "Subject: Lead Gen — N new agencies [{today}]"
@@ -267,6 +269,12 @@ def run_agent(seen_domains: set | None = None) -> dict:
             return _scrape(args["url"])
         elif name == "append_to_sheet":
             batch = args.get("companies", [])
+            today = date.today().isoformat()
+            for c in batch:
+                if not c.get("Date Found"):
+                    c["Date Found"] = today
+                if not c.get("Source"):
+                    c["Source"] = "Exa search"
             submitted_companies.extend(batch)
             return f"Received {len(batch)} companies for validation. Running quality checks before writing."
         elif name == "send_notification":
