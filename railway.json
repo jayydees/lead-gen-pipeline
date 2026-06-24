@@ -1,0 +1,6 @@
+{
+  "deploy": {
+    "cronSchedule": "0 7 * * *",
+    "cronCommand": "python pipeline.py"
+  }
+}
