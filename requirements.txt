@@ -1,7 +1,7 @@
 fastapi>=0.110
 uvicorn>=0.29
 google-genai>=0.8
-duckduckgo-search>=6.0
+exa-py>=1.0
 requests>=2.31
 beautifulsoup4>=4.12
 gspread>=6.0
