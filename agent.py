@@ -221,7 +221,14 @@ Then list top 5 by score with a one-line summary each.
 
 
 def run_agent(seen_domains: set | None = None) -> dict:
-    """Run the lead generation agent. Returns {"count": int, "notification_sent": bool, "summary": str}."""
+    """
+    Run the lead generation agent.
+    Returns {
+        "submitted_companies": list[dict],  # raw, unvalidated — pipeline handles eval/write
+        "notification_summary": str,        # agent-drafted email body
+        "agent_summary": str,               # final agent text
+    }
+    """
     if seen_domains is None:
         seen_domains = get_seen_domains()
 
@@ -240,16 +247,37 @@ def run_agent(seen_domains: set | None = None) -> dict:
                 types.Part(
                     text=(
                         "Run the lead generation pipeline now. Find new agencies, score them, "
-                        "append qualifying ones to the sheet, and send the notification email."
+                        "submit qualifying ones via append_to_sheet, then call send_notification."
                     )
                 )
             ],
         )
     ]
 
-    companies_appended = 0
-    notification_sent = False
+    # Buffer: agent submits companies here; pipeline decides what actually hits the sheet
+    submitted_companies: list[dict] = []
+    notification_summary = ""
     last_text = ""
+
+    def _execute_tool_buffered(name: str, args: dict) -> str:
+        if name == "search":
+            results = _search(args["query"], max_results=MAX_RESULTS_PER_QUERY)
+            return json.dumps(results)
+        elif name == "scrape":
+            return _scrape(args["url"])
+        elif name == "append_to_sheet":
+            batch = args.get("companies", [])
+            submitted_companies.extend(batch)
+            return f"Received {len(batch)} companies for validation. Running quality checks before writing."
+        elif name == "send_notification":
+            nonlocal notification_summary
+            notification_summary = args.get("summary", "")
+            return "Notification queued — will send after quality checks complete."
+        elif name == "scrape_linkedin_company":
+            return _linkedin(args["linkedin_url"])
+        elif name == "search_twitter":
+            return _twitter(args["query"])
+        return f"Unknown tool: {name}"
 
     while True:
         response = client.models.generate_content(
@@ -264,23 +292,15 @@ def run_agent(seen_domains: set | None = None) -> dict:
         function_calls = [p for p in candidate.content.parts if p.function_call]
 
         if not function_calls:
-            # No more tool calls — extract final text if present
             for part in candidate.content.parts:
                 if part.text:
                     last_text = part.text
             break
 
-        # Execute each function call and collect responses
         response_parts = []
         for part in function_calls:
             fc = part.function_call
-            result = _execute_tool(fc.name, dict(fc.args))
-
-            if fc.name == "append_to_sheet":
-                companies_appended = len(fc.args.get("companies", []))
-            elif fc.name == "send_notification":
-                notification_sent = True
-
+            result = _execute_tool_buffered(fc.name, dict(fc.args))
             response_parts.append(
                 types.Part.from_function_response(
                     name=fc.name,
@@ -291,7 +311,7 @@ def run_agent(seen_domains: set | None = None) -> dict:
         contents.append(types.Content(role="user", parts=response_parts))
 
     return {
-        "count": companies_appended,
-        "notification_sent": notification_sent,
-        "summary": last_text or f"Agent completed. {companies_appended} companies appended.",
+        "submitted_companies": submitted_companies,
+        "notification_summary": notification_summary,
+        "agent_summary": last_text,
     }
