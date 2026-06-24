@@ -7,6 +7,7 @@ def search_reddit(query: str, max_posts: int = 10) -> str:
         result = subprocess.run(
             ["rdt", "search", query, "--limit", str(max_posts)],
             capture_output=True, text=True, timeout=30,
+            encoding="utf-8", errors="replace",
         )
         if result.returncode != 0:
             return f"Reddit CLI error: {result.stderr.strip()}"

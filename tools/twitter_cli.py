@@ -7,6 +7,7 @@ def search_twitter(query: str, limit: int = 10) -> str:
         result = subprocess.run(
             ["twitter", "search", query, "-n", str(limit), "--json"],
             capture_output=True, text=True, timeout=30,
+            encoding="utf-8", errors="replace",
         )
         if result.returncode != 0:
             return f"Twitter CLI error: {result.stderr.strip()}"
