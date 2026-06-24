@@ -24,7 +24,9 @@ def send_notification(summary: str) -> str:
     msg.attach(MIMEText(body, "plain"))
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
+            server.starttls()
             server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_ADDRESS, GMAIL_ADDRESS, msg.as_string())
         return "Email notification sent."
