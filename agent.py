@@ -11,6 +11,8 @@ from config import (
     SCORING_RUBRIC,
     SEED_SEARCH_TERMS,
 )
+from tools.apify_linkedin import scrape_linkedin_company as _linkedin
+from tools.apify_twitter import search_twitter as _twitter
 from tools.notify import send_notification as _send_notification
 from tools.scrape import scrape as _scrape
 from tools.search import search as _search
@@ -110,6 +112,42 @@ _TOOLS = types.Tool(
                 required=["summary"],
             ),
         ),
+        types.FunctionDeclaration(
+            name="scrape_linkedin_company",
+            description=(
+                "Scrape a LinkedIn company page to get employee count, specialties, "
+                "headquarters, and description. Use this to enrich promising leads "
+                "when you have their LinkedIn URL."
+            ),
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "linkedin_url": types.Schema(
+                        type=types.Type.STRING,
+                        description="Full LinkedIn company URL, e.g. https://linkedin.com/company/acme",
+                    )
+                },
+                required=["linkedin_url"],
+            ),
+        ),
+        types.FunctionDeclaration(
+            name="search_twitter",
+            description=(
+                "Search Twitter/X for recent posts about a company to verify their "
+                "AI/automation focus and activity level. Use sparingly — only for "
+                "borderline companies where tweet activity would change the score."
+            ),
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "query": types.Schema(
+                        type=types.Type.STRING,
+                        description="Search query, e.g. 'Acme Agency AI automation'",
+                    )
+                },
+                required=["query"],
+            ),
+        ),
     ]
 )
 
@@ -124,6 +162,10 @@ def _execute_tool(name: str, args: dict) -> str:
         return append_companies(args["companies"])
     elif name == "send_notification":
         return _send_notification(args["summary"])
+    elif name == "scrape_linkedin_company":
+        return _linkedin(args["linkedin_url"])
+    elif name == "search_twitter":
+        return _twitter(args["query"])
     return f"Unknown tool: {name}"
 
 

@@ -1,6 +1,7 @@
 fastapi>=0.110
 uvicorn>=0.29
 google-genai>=0.8
+apify-client>=1.6
 exa-py>=1.0
 requests>=2.31
 beautifulsoup4>=4.12

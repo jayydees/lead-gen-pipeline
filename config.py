@@ -5,6 +5,7 @@ load_dotenv()
 
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 EXA_API_KEY = os.environ["EXA_API_KEY"]
+APIFY_API_KEY = os.environ["APIFY_API_KEY"]
 GOOGLE_SHEET_ID = os.environ["GOOGLE_SHEET_ID"]
 GOOGLE_CREDENTIALS_JSON = os.environ["GOOGLE_CREDENTIALS_JSON"]
 GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"]
