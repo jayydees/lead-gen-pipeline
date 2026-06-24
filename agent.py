@@ -191,9 +191,11 @@ def run_agent(seen_domains: set | None = None) -> dict:
         types.Content(
             role="user",
             parts=[
-                types.Part.from_text(
-                    "Run the lead generation pipeline now. Find new agencies, score them, "
-                    "append qualifying ones to the sheet, and send the notification email."
+                types.Part(
+                    text=(
+                        "Run the lead generation pipeline now. Find new agencies, score them, "
+                        "append qualifying ones to the sheet, and send the notification email."
+                    )
                 )
             ],
         )
