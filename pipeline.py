@@ -1,7 +1,6 @@
 import time
 from datetime import datetime, timezone
 
-from agent import run_agent
 from eval import eval_companies
 from tools.monitor import log_run
 from tools.notify import send_notification
@@ -11,7 +10,9 @@ from tools.validate import validate_batch
 last_run: dict = {}
 
 
-def run_pipeline() -> dict:
+def run_pipeline(agent_fn=None) -> dict:
+    if agent_fn is None:
+        from agent import run_agent as agent_fn
     started_at = datetime.now(timezone.utc)
     t0 = time.monotonic()
     errors = ""
@@ -21,7 +22,7 @@ def run_pipeline() -> dict:
         seen_domains = get_seen_domains()
 
         # ── 2. Run agent (buffers companies, does NOT write to sheet) ───────
-        agent_result = run_agent(seen_domains=seen_domains)
+        agent_result = agent_fn(seen_domains=seen_domains)
         raw = agent_result["submitted_companies"]
         notification_summary = agent_result["notification_summary"]
 

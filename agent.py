@@ -252,9 +252,11 @@ Then list top 5 by score with a one-line summary each.
 """
 
 
-def run_agent(seen_domains: set | None = None) -> dict:
+def run_agent(seen_domains: set | None = None, tools_override: dict | None = None) -> dict:
     """
     Run the lead generation agent.
+    tools_override: optional dict to swap tool implementations, e.g.
+        {"scrape": jina_scrape, "search_reddit": rdt_fn, "search_twitter": cli_fn}
     Returns {
         "submitted_companies": list[dict],  # raw, unvalidated — pipeline handles eval/write
         "notification_summary": str,        # agent-drafted email body
@@ -263,6 +265,7 @@ def run_agent(seen_domains: set | None = None) -> dict:
     """
     if seen_domains is None:
         seen_domains = get_seen_domains()
+    _overrides = tools_override or {}
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     system_prompt = _build_system_prompt(seen_domains)
@@ -296,7 +299,8 @@ def run_agent(seen_domains: set | None = None) -> dict:
             results = _search(args["query"], max_results=MAX_RESULTS_PER_QUERY)
             return json.dumps(results)
         elif name == "scrape":
-            return _scrape(args["url"])
+            scrape_fn = _overrides.get("scrape", _scrape)
+            return scrape_fn(args["url"])
         elif name == "append_to_sheet":
             batch = args.get("companies", [])
             today = date.today().isoformat()
@@ -314,9 +318,11 @@ def run_agent(seen_domains: set | None = None) -> dict:
         elif name == "scrape_linkedin_company":
             return _linkedin(args["linkedin_url"])
         elif name == "search_twitter":
-            return _twitter(args["query"])
+            twitter_fn = _overrides.get("search_twitter", _twitter)
+            return twitter_fn(args["query"])
         elif name == "search_reddit":
-            return _reddit(args["query"])
+            reddit_fn = _overrides.get("search_reddit", _reddit)
+            return reddit_fn(args["query"])
         return f"Unknown tool: {name}"
 
     while True:
