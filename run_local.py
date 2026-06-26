@@ -42,7 +42,7 @@ from pipeline import run_pipeline
 
 print("=" * 60)
 print("  Lead Gen — Local Runner")
-print("  Channels: Exa · Jina scraping · Reddit (rdt) · Twitter (CLI) · LinkedIn (Apify)")
+print("  Channels: Exa · Jina scraping · Twitter (Apify) · LinkedIn (Apify)")
 print("=" * 60)
 print()
 
