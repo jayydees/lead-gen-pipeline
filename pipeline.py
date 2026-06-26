@@ -11,10 +11,9 @@ last_run: dict = {}
 
 
 def _pre_discover() -> str:
-    """Run Twitter + Reddit searches before the agent to guarantee channel coverage."""
+    """Run Twitter searches before the agent to guarantee channel coverage."""
     from config import TWITTER_SEED_QUERIES
     from tools.apify_twitter import search_twitter
-    from tools.apify_reddit import search_reddit
 
     parts = []
     for query in TWITTER_SEED_QUERIES[:2]:
@@ -23,17 +22,10 @@ def _pre_discover() -> str:
             if result and "error" not in result.lower():
                 parts.append(f"TWITTER — '{query}':\n{result}")
                 print(f"[pipeline] Twitter pre-discovery OK: {query}")
+            else:
+                print(f"[pipeline] Twitter pre-discovery empty: {query}")
         except Exception as e:
             print(f"[pipeline] Twitter pre-discovery failed: {e}")
-
-    for query in ["AI automation agency recommend hire remote", "n8n agency OR make.com agency hire freelancer"]:
-        try:
-            result = search_reddit(query, max_posts=5)
-            if result and "error" not in result.lower():
-                parts.append(f"REDDIT — '{query}':\n{result}")
-                print(f"[pipeline] Reddit pre-discovery OK: {query}")
-        except Exception as e:
-            print(f"[pipeline] Reddit pre-discovery failed: {e}")
 
     return "\n\n---\n\n".join(parts)
 

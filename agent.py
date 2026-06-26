@@ -14,7 +14,6 @@ from config import (
 )
 from tools.apify_linkedin import scrape_linkedin_company as _linkedin
 from tools.apify_twitter import search_twitter as _twitter
-from tools.apify_reddit import search_reddit as _reddit
 from tools.notify import send_notification as _send_notification
 from tools.scrape import scrape as _scrape
 from tools.search import search as _search
@@ -153,24 +152,6 @@ _TOOLS = types.Tool(
                 required=["query"],
             ),
         ),
-        types.FunctionDeclaration(
-            name="search_reddit",
-            description=(
-                "Search Reddit for posts where people discuss, recommend, or hire automation "
-                "and AI agencies. Use for discovery — find agency names mentioned in threads. "
-                "Run at least 2 Reddit searches per pipeline run."
-            ),
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "query": types.Schema(
-                        type=types.Type.STRING,
-                        description="Search query, e.g. 'AI automation agency recommend hire'",
-                    )
-                },
-                required=["query"],
-            ),
-        ),
     ]
 )
 
@@ -227,12 +208,11 @@ Run ALL of these via search_twitter — they find agencies posting publicly abou
 1. **Exa web search** — run ALL seed queries above; scrape every promising agency URL you find
 2. **Twitter** — run all 3 Twitter queries via search_twitter; any agency handle or website you find, scrape it
 3. **LinkedIn discovery** — the seed queries include site:linkedin.com/company searches; for each LinkedIn URL found, call scrape_linkedin_company to enrich it
-4. **Reddit** — call search_reddit with 2 queries like "AI automation agency recommend" and "n8n agency hire freelancer"; extract agency names/URLs from posts and comments, then scrape those websites
-5. Score every candidate using the rubric; include all scoring >= 40
-6. Call append_to_sheet once with all qualified companies
-7. Call send_notification with a summary
+4. Score every candidate using the rubric; include all scoring >= 40
+5. Call append_to_sheet once with all qualified companies
+6. Call send_notification with a summary
 
-Set Source accurately per company: "Exa search", "Twitter", "LinkedIn", "Reddit", "Clutch", "IndieHackers"
+Set Source accurately per company: "Exa search", "Twitter", "LinkedIn", "Clutch", "IndieHackers"
 
 Do NOT give up early. Run every channel. Keep going until you have tried all seed queries or found {MAX_COMPANIES_PER_RUN} companies.
 
@@ -326,9 +306,6 @@ def run_agent(seen_domains: set | None = None, tools_override: dict | None = Non
         elif name == "search_twitter":
             twitter_fn = _overrides.get("search_twitter", _twitter)
             return twitter_fn(args["query"])
-        elif name == "search_reddit":
-            reddit_fn = _overrides.get("search_reddit", _reddit)
-            return reddit_fn(args["query"])
         return f"Unknown tool: {name}"
 
     while True:
