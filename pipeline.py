@@ -19,7 +19,9 @@ def _pre_discover() -> str:
     for query in TWITTER_SEED_QUERIES[:2]:
         try:
             result = search_twitter(query, max_tweets=5)
-            if result and "error" not in result.lower():
+            preview = (result or "")[:120].replace("\n", " ")
+            print(f"[pipeline] Twitter '{query}' → {preview!r}")
+            if result and "error" not in result.lower() and result != "No tweets found.":
                 parts.append(f"TWITTER — '{query}':\n{result}")
                 print(f"[pipeline] Twitter pre-discovery OK: {query}")
             else:

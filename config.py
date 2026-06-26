@@ -26,19 +26,15 @@ SEED_SEARCH_TERMS = [
     # LinkedIn discovery (Exa finds company pages; use scrape_linkedin_company to enrich)
     'site:linkedin.com/company "AI automation" agency "11-50 employees"',
     'site:linkedin.com/company "workflow automation" boutique agency remote',
-    # Reddit discovery (agencies recommended or discussed)
-    'site:reddit.com "AI automation agency" recommend OR hire OR "worked with"',
-    'site:reddit.com "n8n agency" OR "make.com agency" hire freelancer',
-    'site:reddit.com "looking for automation agency" OR "recommend automation agency"',
     # IndieHackers
     'site:indiehackers.com "automation agency" OR "AI agency"',
 ]
 
 # Twitter discovery queries (passed to search_twitter tool)
 TWITTER_SEED_QUERIES = [
-    "AI automation agency hiring freelancers remote",
-    "workflow automation consultancy small team n8n Claude",
-    "LLM implementation agency boutique remote-first",
+    "n8n automation agency",
+    "AI automation agency remote",
+    "workflow automation consultancy",
 ]
 
 # Target: 10-20 qualified new companies per day
