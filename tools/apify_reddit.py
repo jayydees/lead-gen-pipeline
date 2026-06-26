@@ -11,8 +11,9 @@ def search_reddit(query: str, max_posts: int = 10) -> str:
         run = _client.actor("trudax/reddit-scraper-lite").call(
             run_input={
                 "searches": [query],
-                "maxPostCount": max_posts,
-                "maxComments": 5,
+                "maxItems": max_posts,
+                "searchPosts": True,
+                "skipComments": True,
             }
         )
         items = list(_client.dataset(run["defaultDatasetId"]).iterate_items())

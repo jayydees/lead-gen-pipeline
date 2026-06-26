@@ -46,7 +46,7 @@ print("  Channels: Exa · Jina scraping · Reddit (rdt) · Twitter (CLI) · Link
 print("=" * 60)
 print()
 
-result = run_pipeline(agent_fn=run_agent)
+result = run_pipeline(agent_fn=run_agent, pre_discover_fn=lambda: "")  # local_agent handles pre-discovery itself
 
 print()
 print("=" * 60)

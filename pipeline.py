@@ -10,9 +10,39 @@ from tools.validate import validate_batch
 last_run: dict = {}
 
 
-def run_pipeline(agent_fn=None) -> dict:
+def _pre_discover() -> str:
+    """Run Twitter + Reddit searches before the agent to guarantee channel coverage."""
+    from config import TWITTER_SEED_QUERIES
+    from tools.apify_twitter import search_twitter
+    from tools.apify_reddit import search_reddit
+
+    parts = []
+    for query in TWITTER_SEED_QUERIES[:2]:
+        try:
+            result = search_twitter(query, max_tweets=5)
+            if result and "error" not in result.lower():
+                parts.append(f"TWITTER — '{query}':\n{result}")
+                print(f"[pipeline] Twitter pre-discovery OK: {query}")
+        except Exception as e:
+            print(f"[pipeline] Twitter pre-discovery failed: {e}")
+
+    for query in ["AI automation agency recommend hire remote", "n8n agency OR make.com agency hire freelancer"]:
+        try:
+            result = search_reddit(query, max_posts=5)
+            if result and "error" not in result.lower():
+                parts.append(f"REDDIT — '{query}':\n{result}")
+                print(f"[pipeline] Reddit pre-discovery OK: {query}")
+        except Exception as e:
+            print(f"[pipeline] Reddit pre-discovery failed: {e}")
+
+    return "\n\n---\n\n".join(parts)
+
+
+def run_pipeline(agent_fn=None, pre_discover_fn=None) -> dict:
     if agent_fn is None:
         from agent import run_agent as agent_fn
+    if pre_discover_fn is None:
+        pre_discover_fn = _pre_discover
     started_at = datetime.now(timezone.utc)
     t0 = time.monotonic()
     errors = ""
@@ -21,12 +51,17 @@ def run_pipeline(agent_fn=None) -> dict:
         # ── 1. Collect seen domains for dedup context ──────────────────────
         seen_domains = get_seen_domains()
 
-        # ── 2. Run agent (buffers companies, does NOT write to sheet) ───────
-        agent_result = agent_fn(seen_domains=seen_domains)
+        # ── 2. Pre-discover via Twitter + Reddit (guaranteed channel coverage)
+        print("[pipeline] Pre-discovering via Twitter + Reddit...")
+        seed_context = pre_discover_fn()
+        print(f"[pipeline] Seed context: {'collected' if seed_context else 'none (tools may be unavailable)'}")
+
+        # ── 3. Run agent (buffers companies, does NOT write to sheet) ───────
+        agent_result = agent_fn(seen_domains=seen_domains, seed_context=seed_context)
         raw = agent_result["submitted_companies"]
         notification_summary = agent_result["notification_summary"]
 
-        # ── 3. Hard validation ──────────────────────────────────────────────
+        # ── 4. Hard validation ──────────────────────────────────────────────
         valid, invalid = validate_batch(raw)
         validation_rejections = [
             f"{c.get('Company Name','?')}: {c.get('rejection_reason','')}"
@@ -40,7 +75,7 @@ def run_pipeline(agent_fn=None) -> dict:
         if invalid:
             print(f"[pipeline] Validation rejections: {validation_rejections}")
 
-        # ── 4. LLM eval pass ────────────────────────────────────────────────
+        # ── 5. LLM eval pass ────────────────────────────────────────────────
         eval_results = eval_companies(valid)
         passed = [c for c in eval_results if c.get("eval_pass", True)]
         eval_rejected = [c for c in eval_results if not c.get("eval_pass", True)]
@@ -53,7 +88,7 @@ def run_pipeline(agent_fn=None) -> dict:
         if eval_rejected:
             print(f"[pipeline] Eval rejections: {eval_rejection_notes}")
 
-        # ── 5. Write to sheet ───────────────────────────────────────────────
+        # ── 6. Write to sheet ───────────────────────────────────────────────
         # Strip internal eval fields before writing
         clean = [
             {k: v for k, v in c.items() if not k.startswith("eval_") and k != "score_inflation_warning"}
@@ -64,7 +99,7 @@ def run_pipeline(agent_fn=None) -> dict:
 
         print(f"[pipeline] {write_result}")
 
-        # ── 6. Send notification ────────────────────────────────────────────
+        # ── 7. Send notification ────────────────────────────────────────────
         notification_sent = False
         if notification_summary:
             eval_footer = ""
@@ -78,7 +113,7 @@ def run_pipeline(agent_fn=None) -> dict:
             notification_sent = "sent" in send_result.lower()
             print(f"[pipeline] {send_result}")
 
-        # ── 7. Log run to Runs Log tab ──────────────────────────────────────
+        # ── 8. Log run to Runs Log tab ──────────────────────────────────────
         elapsed = time.monotonic() - t0
         log_run(
             duration_s=elapsed,

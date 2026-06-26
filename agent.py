@@ -252,7 +252,7 @@ Then list top 5 by score with a one-line summary each.
 """
 
 
-def run_agent(seen_domains: set | None = None, tools_override: dict | None = None) -> dict:
+def run_agent(seen_domains: set | None = None, tools_override: dict | None = None, seed_context: str = "") -> dict:
     """
     Run the lead generation agent.
     tools_override: optional dict to swap tool implementations, e.g.
@@ -275,17 +275,23 @@ def run_agent(seen_domains: set | None = None, tools_override: dict | None = Non
         tools=[_TOOLS],
     )
 
+    initial_text = (
+        "Run the lead generation pipeline now. Find new agencies, score them, "
+        "submit qualifying ones via append_to_sheet, then call send_notification."
+    )
+    if seed_context:
+        initial_text += (
+            "\n\nIMPORTANT: The following leads were already discovered via Twitter and Reddit. "
+            "You MUST scrape each URL found in these results, score them, and include all "
+            "qualifying ones (score >= 40) in your append_to_sheet call. Set Source to "
+            "'Twitter' or 'Reddit' accordingly.\n\n"
+            + seed_context
+        )
+
     contents = [
         types.Content(
             role="user",
-            parts=[
-                types.Part(
-                    text=(
-                        "Run the lead generation pipeline now. Find new agencies, score them, "
-                        "submit qualifying ones via append_to_sheet, then call send_notification."
-                    )
-                )
-            ],
+            parts=[types.Part(text=initial_text)],
         )
     ]
 
